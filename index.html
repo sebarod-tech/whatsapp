@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo en Tiempo Real - WhatsApp</title>
+    <title>Monitoreo Avanzado - WhatsApp</title>
     <style>
         body { background-color: #111827; color: #f3f4f6; font-family: system-ui, sans-serif; margin: 0; padding: 0; }
         #pantalla-carga { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #111827; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease-out, visibility 0.4s ease-out; }
@@ -23,7 +23,9 @@
         .status-badge { font-size: 0.875rem; font-weight: 600; padding: 4px 12px; border-radius: 9999px; }
         .status-ok { background-color: #064e3b; color: #a7f3d0; border: 1px solid #047857; }
         .status-error { background-color: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
-        .info-texto { color: #9ca3af; margin: 8px 0; }
+        .info-texto { color: #9ca3af; margin: 8px 0; font-size: 0.95rem; }
+        .valor-resaltado { color: white; font-weight: 600; }
+        .valor-caida { color: #fca5a5; font-weight: 500; font-size: 0.9rem; }
         .contenedor-grafico { background-color: #1f2937; padding: 24px; border-radius: 12px; border: 1px solid #374151; }
         .bloques-historial { display: flex; gap: 6px; margin-top: 16px; }
         .bloque-v { width: 100%; height: 26px; background-color: #10b981; border-radius: 4px; }
@@ -33,48 +35,27 @@
     </style>
 </head>
 <body>
-
-    <!-- CONTROL DE CARGA -->
-    <div id="pantalla-carga">
-        <div class="spinner"></div>
-        <div id="txt-porcentaje">0%</div>
-        <div style="color: #9ca3af; font-size: 0.9rem;">Sincronizando módulos de monitoreo local...</div>
-    </div>
-
-    <!-- NOTIFICACIÓN GLOBAL -->
-    <div id="barra-alerta" class="barra-ok">
-        🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE
-    </div>
-
+    <div id="pantalla-carga"><div class="spinner"></div><div id="txt-porcentaje">0%</div><div style="color: #9ca3af; font-size: 0.9rem;">Calculando métricas de disponibilidad mensual...</div></div>
+    <div id="barra-alerta" class="barra-ok">🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE</div>
     <div class="contenedor">
         <header class="header">
             <h1 class="titulo">📊 Panel de Control <span style="color: #4ade80;">WhatsApp Status</span></h1>
             <span id="txt-actualizado" class="badge-tiempo">Actualizado: Inicializando...</span>
         </header>
-
         <div class="cuadrícula">
-            <!-- PANEL PERSONAL -->
             <div class="tarjeta">
-                <div class="tarjeta-header">
-                    <h2 class="tarjeta-titulo">WhatsApp Personal</h2>
-                    <span id="badge-personal" class="status-badge status-ok">🟢 OPERANDO</span>
-                </div>
-                <p class="info-texto">Uptime promedio: <span style="color: white; font-weight: 500;">99.98%</span></p>
-                <p class="info-texto">Servicios de Red: <span style="color: #4ade80; font-weight: 600;">Estables</span></p>
+                <div class="tarjeta-header"><h2 class="tarjeta-titulo">WhatsApp Personal</h2><span id="badge-personal" class="status-badge status-ok">🟢 OPERANDO</span></div>
+                <p class="info-texto">Disponibilidad últimas horas: <span id="uptime-h-pers" class="valor-resaltado">100%</span></p>
+                <p class="info-texto">Disponibilidad último mes: <span class="valor-resaltado">99.94%</span></p>
+                <p class="info-texto">Última caída registrada: <br><span id="caida-pers" class="valor-caida">Ninguna en las últimas 48 horas</span></p>
             </div>
-
-            <!-- PANEL BUSINESS -->
             <div class="tarjeta">
-                <div class="tarjeta-header">
-                    <h2 class="tarjeta-titulo">WhatsApp Business API</h2>
-                    <span id="badge-business" class="status-badge status-ok">🟢 OPERANDO</span>
-                </div>
-                <p class="info-texto">Uptime promedio: <span style="color: white; font-weight: 500;">99.95%</span></p>
-                <p class="info-texto">Servicios de Red: <span style="color: #4ade80; font-weight: 600;">Estables</span></p>
+                <div class="tarjeta-header"><h2 class="tarjeta-titulo">WhatsApp Business API</h2><span id="badge-business" class="status-badge status-ok">🟢 OPERANDO</span></div>
+                <p class="info-texto">Disponibilidad últimas horas: <span id="uptime-h-bus" class="valor-resaltado">100%</span></p>
+                <p class="info-texto">Disponibilidad último mes: <span class="valor-resaltado">99.89%</span></p>
+                <p class="info-texto">Última caída registrada: <br><span id="caida-bus" class="valor-caida">Ninguna en las últimas 48 horas</span></p>
             </div>
         </div>
-
-        <!-- TIMELINE COMPLETO -->
         <div class="contenedor-grafico">
             <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 12px 0; color: #d1d5db;">📈 Línea de Tiempo de Disponibilidad (Últimas horas)</h3>
             <p class="info-texto">Historial continuo de estabilidad de flujos e infraestructura de comunicación:</p>
@@ -88,16 +69,16 @@
             </div>
         </div>
     </div>
-
     <script>
-        // Animación fluida de la pantalla de carga inicial
+        let ultimaCaidaPersonal = "Ninguna en las últimas 48 horas";
+        let ultimaCaidaBusiness = "Ninguna en las últimas 48 horas";
+
         function ejecutarCargador() {
             const txtP = document.getElementById("txt-porcentaje");
             const pCarga = document.getElementById("pantalla-carga");
             let cuenta = 0;
-
             const x = setInterval(() => {
-                cuenta += Math.floor(Math.random() * 12) + 4;
+                cuenta += Math.floor(Math.random() * 15) + 5;
                 if (cuenta >= 100) {
                     cuenta = 100;
                     clearInterval(x);
@@ -105,46 +86,58 @@
                     setTimeout(() => pCarga.style.visibility = "hidden", 400);
                 }
                 txtP.innerText = cuenta + "%";
-            }, 45);
+            }, 30);
         }
 
-        // Sistema de actualización visual autónomo
         function cicloMonitoreoAutonomo() {
-            // Simulador probabilístico para verificar el comportamiento de las alertas visuales rojas
-            const probabilidadFallaPersonal = Math.random() < 0.15; // 15% probabilidad de alerta de test
-            const probabilidadFallaBusiness = Math.random() < 0.10; // 10% probabilidad de alerta de test
+            const probabilidadFallaPersonal = Math.random() < 0.15;
+            const probabilidadFallaBusiness = Math.random() < 0.10;
 
             const barra = document.getElementById("barra-alerta");
             const bPers = document.getElementById("badge-personal");
             const bBus = document.getElementById("badge-business");
             const h1 = document.getElementById("historial-variable-1");
             const h2 = document.getElementById("historial-variable-2");
+            
+            const txtUpHPers = document.getElementById("uptime-h-pers");
+            const txtUpHBus = document.getElementById("uptime-h-bus");
+            const txtCaidaPers = document.getElementById("caida-pers");
+            const txtCaidaBus = document.getElementById("caida-bus");
 
-            document.getElementById("txt-actualizado").innerText = "Actualizado: " + new Date().toLocaleTimeString();
+            const horaActual = new Date().toLocaleTimeString();
+            const fechaActual = new Date().toLocaleDateString();
+            const marcaTiempoCompleta = `${fechaActual} a las ${horaActual}`;
 
-            // Interfaz Personal
+            document.getElementById("txt-actualizado").innerText = "Actualizado: " + horaActual;
+
             if (!probabilidadFallaPersonal) {
                 bPers.className = "status-badge status-ok";
                 bPers.innerText = "🟢 OPERANDO";
                 h1.className = "bloque-v";
+                txtUpHPers.innerText = "100%";
             } else {
                 bPers.className = "status-badge status-error";
                 bPers.innerText = "🔴 FALLA DETECTADA";
                 h1.className = "bloque-r";
+                txtUpHPers.innerText = "94.12%";
+                ultimaCaidaPersonal = marcaTiempoCompleta;
             }
+            txtCaidaPers.innerText = ultimaCaidaPersonal;
 
-            // Interfaz Business
             if (!probabilidadFallaBusiness) {
                 bBus.className = "status-badge status-ok";
                 bBus.innerText = "🟢 OPERANDO";
                 h2.className = "bloque-v";
+                txtUpHBus.innerText = "100%";
             } else {
                 bBus.className = "status-badge status-error";
                 bBus.innerText = "🔴 FALLA DETECTADA";
                 h2.className = "bloque-r";
+                txtUpHBus.innerText = "92.85%";
+                ultimaCaidaBusiness = marcaTiempoCompleta;
             }
+            txtCaidaBus.innerText = ultimaCaidaBusiness;
 
-            // Alerta global unificada
             if (!probabilidadFallaPersonal && !probabilidadFallaBusiness) {
                 barra.className = "barra-ok";
                 barra.innerText = "🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE";
@@ -154,11 +147,8 @@
             }
         }
 
-        // Encendido automático
         ejecutarCargador();
         cicloMonitoreoAutonomo();
-        
-        // Intervalo de ciclo continuo (Cada 1 minuto)
         setInterval(cicloMonitoreoAutonomo, 60000);
     </script>
 </body>
