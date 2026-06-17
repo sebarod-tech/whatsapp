@@ -25,7 +25,7 @@
         .status-error { background-color: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
         .info-texto { color: #9ca3af; margin: 8px 0; font-size: 0.95rem; }
         .valor-resaltado { color: white; font-weight: 600; }
-        .valor-caida { color: #fca5a5; font-weight: 500; font-size: 0.9rem; }
+        .valor-caida { color: #fca5a5; font-weight: 500; font-size: 0.9rem; background-color: #111827; padding: 4px 8px; border-radius: 6px; display: inline-block; margin-top: 4px; }
         .contenedor-grafico { background-color: #1f2937; padding: 24px; border-radius: 12px; border: 1px solid #374151; }
         .bloques-historial { display: flex; gap: 6px; margin-top: 16px; }
         .bloque-v { width: 100%; height: 26px; background-color: #10b981; border-radius: 4px; }
@@ -35,7 +35,7 @@
     </style>
 </head>
 <body>
-    <div id="pantalla-carga"><div class="spinner"></div><div id="txt-porcentaje">0%</div><div style="color: #9ca3af; font-size: 0.9rem;">Calculando métricas de disponibilidad mensual...</div></div>
+    <div id="pantalla-carga"><div class="spinner"></div><div id="txt-porcentaje">0%</div><div style="color: #9ca3af; font-size: 0.9rem;">Cargando registro histórico de persistencia de datos...</div></div>
     <div id="barra-alerta" class="barra-ok">🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE</div>
     <div class="contenedor">
         <header class="header">
@@ -47,13 +47,13 @@
                 <div class="tarjeta-header"><h2 class="tarjeta-titulo">WhatsApp Personal</h2><span id="badge-personal" class="status-badge status-ok">🟢 OPERANDO</span></div>
                 <p class="info-texto">Disponibilidad últimas horas: <span id="uptime-h-pers" class="valor-resaltado">100%</span></p>
                 <p class="info-texto">Disponibilidad último mes: <span class="valor-resaltado">99.94%</span></p>
-                <p class="info-texto">Última caída registrada: <br><span id="caida-pers" class="valor-caida">Ninguna en las últimas 48 horas</span></p>
+                <p class="info-texto">Última caída registrada en el sistema: <br><span id="caida-pers" class="valor-caida">Buscando registros...</span></p>
             </div>
             <div class="tarjeta">
                 <div class="tarjeta-header"><h2 class="tarjeta-titulo">WhatsApp Business API</h2><span id="badge-business" class="status-badge status-ok">🟢 OPERANDO</span></div>
                 <p class="info-texto">Disponibilidad últimas horas: <span id="uptime-h-bus" class="valor-resaltado">100%</span></p>
                 <p class="info-texto">Disponibilidad último mes: <span class="valor-resaltado">99.89%</span></p>
-                <p class="info-texto">Última caída registrada: <br><span id="caida-bus" class="valor-caida">Ninguna en las últimas 48 horas</span></p>
+                <p class="info-texto">Última caída registrada en el sistema: <br><span id="caida-bus" class="valor-caida">Buscando registros...</span></p>
             </div>
         </div>
         <div class="contenedor-grafico">
@@ -70,8 +70,9 @@
         </div>
     </div>
     <script>
-        let ultimaCaidaPersonal = "Ninguna en las últimas 48 horas";
-        let ultimaCaidaBusiness = "Ninguna en las últimas 48 horas";
+        // Cargar registros históricos guardados en la memoria local del navegador
+        let ultimaCaidaPersonal = localStorage.getItem('caida_pers_fecha') || "Sin caídas detectadas en este dispositivo";
+        let ultimaCaidaBusiness = localStorage.getItem('caida_bus_fecha') || "Sin caídas detectadas en este dispositivo";
 
         function ejecutarCargador() {
             const txtP = document.getElementById("txt-porcentaje");
@@ -86,12 +87,13 @@
                     setTimeout(() => pCarga.style.visibility = "hidden", 400);
                 }
                 txtP.innerText = cuenta + "%";
-            }, 30);
+            }, 25);
         }
 
         function cicloMonitoreoAutonomo() {
-            const probabilidadFallaPersonal = Math.random() < 0.15;
-            const probabilidadFallaBusiness = Math.random() < 0.10;
+            // Simulador probabilístico local integrado para evitar bloqueos corporativos externos
+            const probabilidadFallaPersonal = Math.random() < 0.12; 
+            const probabilidadFallaBusiness = Math.random() < 0.08; 
 
             const barra = document.getElementById("barra-alerta");
             const bPers = document.getElementById("badge-personal");
@@ -106,10 +108,11 @@
 
             const horaActual = new Date().toLocaleTimeString();
             const fechaActual = new Date().toLocaleDateString();
-            const marcaTiempoCompleta = `${fechaActual} a las ${horaActual}`;
+            const marcaTiempoCompleta = `${fechaActual} - ${horaActual}`;
 
             document.getElementById("txt-actualizado").innerText = "Actualizado: " + horaActual;
 
+            // WhatsApp Personal
             if (!probabilidadFallaPersonal) {
                 bPers.className = "status-badge status-ok";
                 bPers.innerText = "🟢 OPERANDO";
@@ -120,10 +123,13 @@
                 bPers.innerText = "🔴 FALLA DETECTADA";
                 h1.className = "bloque-r";
                 txtUpHPers.innerText = "94.12%";
+                // Guardar permanentemente la fecha de la falla
                 ultimaCaidaPersonal = marcaTiempoCompleta;
+                localStorage.setItem('caida_pers_fecha', ultimaCaidaPersonal);
             }
             txtCaidaPers.innerText = ultimaCaidaPersonal;
 
+            // WhatsApp Business
             if (!probabilidadFallaBusiness) {
                 bBus.className = "status-badge status-ok";
                 bBus.innerText = "🟢 OPERANDO";
@@ -134,10 +140,13 @@
                 bBus.innerText = "🔴 FALLA DETECTADA";
                 h2.className = "bloque-r";
                 txtUpHBus.innerText = "92.85%";
+                // Guardar permanentemente la fecha de la falla
                 ultimaCaidaBusiness = marcaTiempoCompleta;
+                localStorage.setItem('caida_bus_fecha', ultimaCaidaBusiness);
             }
             txtCaidaBus.innerText = ultimaCaidaBusiness;
 
+            // Barra de notificación general
             if (!probabilidadFallaPersonal && !probabilidadFallaBusiness) {
                 barra.className = "barra-ok";
                 barra.innerText = "🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE";
@@ -147,8 +156,11 @@
             }
         }
 
+        // Ejecución de arranque
         ejecutarCargador();
         cicloMonitoreoAutonomo();
+        
+        // TEMPORIZADOR AUTOMÁTICO EXACTO SEGUNDO PLANO (Cada 1 minuto = 60000ms)
         setInterval(cicloMonitoreoAutonomo, 60000);
     </script>
 </body>
