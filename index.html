@@ -127,26 +127,40 @@
             }, 20);
         }
 
+        // Descarga el historial unificado directo de Google Sheets
         async function descargarHistorialGoogleSheets() {
             try {
                 const respuesta = await fetch(URL_GOOGLE_DATABASE);
                 const registros = await respuesta.json();
+                
+                // CONTROL DE DEPURACIÓN: Ver en la consola del navegador si Google está enviando datos
+                console.log("Datos recibidos de Google Sheets:", registros);
+                
                 const tabla = document.getElementById("lista-caidas-publicas");
                 
-                if (registros.length > 0) {
-                    tabla.innerHTML = "";
+                if (registros && registros.length > 0) {
+                    tabla.innerHTML = ""; // Borra el mensaje de 'No hay registros'
+                    
                     registros.forEach(item => {
-                        const fila = document.createElement("tr");
-                        fila.innerHTML = `
-                            <td>${item.fecha}</td>
-                            <td>${item.servicio}</td>
-                            <td><span style="color: #fca5a5;">${item.duracion}</span></td>
-                            <td><span class="tipo-global">${item.tipo}</span></td>
-                        `;
-                        tabla.appendChild(fila);
+                        // Extraer el array interno de celdas que envía Google Apps Script
+                        const celda = item.fecha || []; 
+                        
+                        // Validar que la fila tenga datos reales
+                        if (celda.length >= 4) {
+                            const fila = document.createElement("tr");
+                            fila.innerHTML = `
+                                <td>${celda[0]}</td>
+                                <td>${celda[1]}</td>
+                                <td><span style="color: #fca5a5;">${celda[2]}</span></td>
+                                <td><span class="tipo-global">${celda[3]}</span></td>
+                            `;
+                            tabla.appendChild(fila);
+                        }
                     });
                 }
-            } catch (error) { console.error("Error base de datos: ", error); }
+            } catch (error) {
+                console.error("Error de sincronización con la base de datos de Google Sheets: ", error);
+            }
         }
 
         async function verificarFuentesEnTiempoReal() {
