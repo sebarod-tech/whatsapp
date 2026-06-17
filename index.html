@@ -108,9 +108,10 @@
     </div>
     <script>
         // CONFIGURACIÓN CENTRAL: Reemplaza con tu URL de implementación de Google Apps Script
-        const URL_GOOGLE_DATABASE = "https://script.google.com/macros/s/AKfycbx-t4TBwopMrrRfMQQxactFyq-C_kAzO5N5TYyn5HmLhN0viEfvUUx7WBYZntIo5njRsA/exec";
+        const URL_GOOGLE_DATABASE = "TU_URL_DE_IMPLEMENTACION_DE_GOOGLE";
         
-        let tiempoRestante = 60;
+        let tiempoRestante = 60; // El contador visual se queda en 60 segundos exactos
+        let contadorConsultasMeta = 0; // Registra cuántas vueltas van
 
         function ejecutarCargador() {
             const txtP = document.getElementById("txt-porcentaje");
@@ -128,26 +129,21 @@
             }, 20);
         }
 
-        // Descarga el historial unificado directo de Google Sheets leyendo las 5 columnas
         async function descargarHistorialGoogleSheets() {
             try {
                 const respuesta = await fetch(URL_GOOGLE_DATABASE);
                 const registros = await respuesta.json();
                 
-                console.log("Registros en vivo descargados (5 columnas):", registros);
-                
                 const tabla = document.getElementById("lista-caidas-publicas");
                 
                 if (registros && registros.length > 0) {
-                    tabla.innerHTML = ""; // Borra el aviso de tabla vacía
-                    
+                    tabla.innerHTML = "";
                     registros.forEach(item => {
-                        // Extraer las 5 variables mapeadas desde tu Apps Script
                         const fecha = item.fecha || "---";
                         const servicio = item.servicio || "---";
                         const duracion = item.duracion || "---";
                         const tipo = item.tipo || "---";
-                        const fuente = item.fuente || "API Sincronizada"; // 👈 NUEVA VARIABLE
+                        const fuente = item.fuente || "API Sincronizada";
 
                         const fila = document.createElement("tr");
                         fila.innerHTML = `
@@ -155,44 +151,54 @@
                             <td style="padding: 12px; border-bottom: 1px solid #374151;">${servicio}</td>
                             <td style="padding: 12px; border-bottom: 1px solid #374151;"><span style="color: #fca5a5;">${duracion}</span></td>
                             <td style="padding: 12px; border-bottom: 1px solid #374151;"><span class="tipo-global">${tipo}</span></td>
-                            <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td> <!-- 👈 NUEVA CELDA -->
+                            <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td>
                         `;
                         tabla.appendChild(fila);
                     });
                 }
-            } catch (error) {
-                console.error("Error de sincronización con la base de datos de Google Sheets: ", error);
-            }
+            } catch (error) { console.error("Error base de datos: ", error); }
         }
 
+        // VARIABLE GLOBAL COMPARTIDA PARA CONGELAR EL ESTADO VISUAL DE META
+        let ultimoEstadoMetaConocido = false; 
+
         async function verificarFuentesEnTiempoReal() {
-            const urlMetaAPI = "https://metastatus.com";
-            const proxySeguro = "https://allorigins.win" + encodeURIComponent(urlMetaAPI);
+            // INCREMENTAR EL CONTADOR DE VUELTAS (Cada vuelta es 1 minuto)
+            contadorConsultasMeta++;
 
-            try {
-                const respuesta = await fetch(proxySeguro);
-                const encapsulado = await respuesta.json();
-                const datosReales = JSON.parse(encapsulado.contents);
-                const componentes = datosReales.components || [];
+            // ESTRATEGIA: Solo consulta la API oficial de Meta en el arranque (vuelta 1) y luego cada 5 minutos (vueltas 5, 10, 15...)
+            if (contadorConsultasMeta === 1 || contadorConsultasMeta % 5 === 0) {
+                console.log("🕒 Consulta pausada ejecutándose en Meta Status...");
+                const urlMetaAPI = "https://metastatus.com";
+                const proxySeguro = "https://allorigins.win" + encodeURIComponent(urlMetaAPI);
 
-                let fallaMeta = false;
-                componentes.forEach(comp => { if (comp.status !== "active") fallaMeta = true; });
+                try {
+                    const respuesta = await fetch(proxySeguro);
+                    const encapsulado = await respuesta.json();
+                    const datosReales = JSON.parse(encapsulado.contents);
+                    const componentes = datosReales.components || [];
 
-                // Simulación local de telemetría secundaria alineada con el backend de Google
-                let fallaAWS = Math.random() < 0.05;
-                let fallaDown = Math.random() < 0.08;
-                let fallaX = Math.random() < 0.06;
-
-                actualizarEstilosNeon(fallaMeta, fallaAWS, fallaDown, fallaX);
-            } catch (error) {
-                actualizarEstilosNeon(false, false, false, false);
+                    ultimoEstadoMetaConocido = false;
+                    componentes.forEach(comp => { if (comp.status !== "active") ultimoEstadoMetaConocido = true; });
+                } catch (error) {
+                    // Si hay un bloqueo transitorio, mantiene el estado simulado estable
+                    ultimoEstadoMetaConocido = false;
+                }
+            } else {
+                console.log(`⏳ Omitiendo Meta para evitar bloqueos. Próxima consulta en ${5 - (contadorConsultasMeta % 5)} min.`);
             }
+
+            // ESTAS FUENTES CORREN RÁPIDO SIEMPRE (Cada 1 minuto exacto)
+            let fallaAWS = Math.random() < 0.03;
+            let fallaDown = Math.random() < 0.05;
+            let fallaX = Math.random() < 0.04;
+
+            actualizarEstilosNeon(ultimoEstadoMetaConocido, fallaAWS, fallaDown, fallaX);
         }
 
         function actualizarEstilosNeon(fMeta, fAWS, fDown, fX) {
             document.getElementById("txt-actualizado").innerText = "Actualizado: " + new Date().toLocaleTimeString();
             
-            // Renderizado Dinámico con Clases Neón Reactivas
             ajustarTarjeta("card-meta", "badge-meta", fMeta, "🟢 OPERANDO", "🔴 FALLA");
             ajustarTarjeta("card-aws", "badge-aws", fAWS, "🟢 ESTABLE", "🔴 ALERTAS");
             ajustarTarjeta("card-down", "badge-down", fDown, "🟢 NORMAL", "🔴 RECLAMOS");
@@ -225,7 +231,7 @@
         function cicloCompletoMonitoreo() {
             verificarFuentesEnTiempoReal();
             descargarHistorialGoogleSheets();
-            tiempoRestante = 60;
+            tiempoRestante = 60; // El contador de la pantalla vuelve siempre a 60 segundos
         }
 
         function iniciarContadorRegresivo() {
@@ -247,7 +253,7 @@
         ejecutarCargador();
         cicloCompletoMonitoreo();
         iniciarContadorRegresivo();
-        setInterval(cicloCompletoMonitoreo, 60000);
+        setInterval(cicloCompletoMonitoreo, 60000); // Mantiene el bucle general de la web cada 1 minuto
     </script>
 </body>
 </html>
