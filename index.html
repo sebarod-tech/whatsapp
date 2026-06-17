@@ -130,50 +130,64 @@
         }
 
         async function descargarHistorialGoogleSheets() {
-    try {
-        const respuesta = await fetch(URL_GOOGLE_DATABASE);
-        const registros = await respuesta.json();
+            try {
+                const respuesta = await fetch(URL_GOOGLE_DATABASE);
+                const registros = await respuesta.json();
         
-        console.log("Datos crudos recibidos:", registros);
-        const tabla = document.getElementById("lista-caidas-publicas");
+                console.log("Datos de control recibidos:", registros);
+                const tabla = document.getElementById("lista-caidas-publicas");
         
-        if (registros && registros.length > 0) {
-            tabla.innerHTML = ""; // Limpia la tabla
+                if (registros && registros.length > 0) {
+                    tabla.innerHTML = ""; // Limpia por completo la tabla
             
-            registros.forEach(item => {
-                // Forzar el texto completo que viene en el objeto
-                let textoCompleto = item.fecha || "";
-                
-                // Si por alguna razón viene en otra propiedad, lo capturamos
-                if (typeof item === 'string') textoCompleto = item;
-                if (Array.isArray(item)) textoCompleto = item.join(",");
-                
-                // --- EL TRUCO: SEPARAR POR COMAS ---
-                // Divide la cadena de texto cada vez que encuentra una coma
-                const partes = textoCompleto.split(",");
-                
-                // Asignar cada parte por su orden si se logró separar, sino usa el texto original
-                const fecha = partes[0] ? partes[0].trim() : textoCompleto;
-                const servicio = partes[1] ? partes[1].trim() : "---";
-                const duracion = partes[2] ? partes[2].trim() : "---";
-                const tipo = partes[3] ? partes[3].trim() : "---";
-                const fuente = partes[4] ? partes[4].trim() : "API Sincronizada";
+                    registros.forEach(item => {
+                        let fecha = "---", servicio = "---", duracion = "---", tipo = "---", fuente = "API Sincronizada";
 
-                const fila = document.createElement("tr");
-                fila.innerHTML = `
-                    <td style="padding: 12px; border-bottom: 1px solid #374151;">${fecha}</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #374151;">${servicio}</td>
-                    <td style="padding: 12px; border-bottom: 1px solid #374151;"><span style="color: #fca5a5;">${duracion}</span></td>
-                    <td style="padding: 12px; border-bottom: 1px solid #374151;"><span class="tipo-global">${tipo}</span></td>
-                    <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td>
-                `;
-                tabla.appendChild(fila);
-            });
+                // CASO A: Si los datos vienen estructurados como propiedades individuales directas
+                if (item && item.fecha && typeof item.fecha === 'string' && !item.fecha.includes(',')) {
+                    fecha = item.fecha;
+                    servicio = item.servicio || "---";
+                    duracion = item.duracion || "---";
+                    tipo = item.tipo || "---";
+                    fuente = item.fuente || "API Sincronizada";
+                } 
+                        // CASO B: Si vienen empaquetados en un solo bloque largo de texto separado por comas
+                        else {
+                            let textoAProcesar = "";
+                            if (item && item.fecha) textoAProcesar = String(item.fecha);
+                            else if (typeof item === 'string') textoAProcesar = item;
+                            else if (Array.isArray(item)) textoAProcesar = item.join(",");
+                            else textoAProcesar = JSON.stringify(item);
+
+                            if (textoAProcesar.includes(",")) {
+                                const partes = textoAProcesar.split(",");
+                                if (partes[0]) fecha = partes[0].trim();
+                                  if (partes[1]) servicio = partes[1].trim();
+                                if (partes[2]) duracion = partes[2].trim();
+                                if (partes[3]) tipo = partes[3].trim();
+                                if (partes[4]) fuente = partes[4].trim();
+                            } else {
+                                fecha = textoAProcesar;
+                            }
+                        }
+
+                        // Inyección segura de las celdas ordenadas en tu código HTML
+                        const fila = document.createElement("tr");
+                            fila.innerHTML = `
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;">${fecha}</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;">${servicio}</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;"><span style="color: #fca5a5;">${duracion}</span></td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;"><span class="tipo-global">${tipo}</span></td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td>
+                        `;
+                        tabla.appendChild(fila);
+                    });
+                }
+            } catch (error) { 
+                console.error("Error crítico en la comunicación con la base de datos: ", error); 
+            }
         }
-    } catch (error) { 
-        console.error("Error de conexión con Google Sheets: ", error); 
-    }
-}
+
         
         // VARIABLE GLOBAL COMPARTIDA PARA CONGELAR EL ESTADO VISUAL DE META
         let ultimoEstadoMetaConocido = false; 
