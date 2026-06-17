@@ -143,26 +143,22 @@
                     tabla.innerHTML = ""; // Elimina de inmediato el mensaje de 'No hay registros'
             
                     registros.forEach(item => {
-                        // Forzar la lectura del array interno de celdas de la fila
-                        const celda = Array.isArray(item) ? item : (item.fecha || []);
-                
-                        if (celda.length >= 4) {
-                            const fecha = celda[0] || "---";
-                            const servicio = celda[1] || "---";
-                            const duracion = celda[2] || "---";
-                            const tipo = celda[3] || "---";
-                            const fuente = celda[4] || "API Sincronizada"; // Captura la 5ta columna
+                        // Extraer de forma individual cada propiedad estructurada de tu objeto de Google
+                        const fecha = item.fecha || "---";
+                        const servicio = item.servicio || "---";
+                        const duracion = item.duracion || "---";
+                        const tipo = item.tipo || "---";
+                        const fuente = item.fuente || "API Sincronizada"; // Captura la 5ta columna
 
-                            const fila = document.createElement("tr");
-                            fila.innerHTML = `
-                                <td style="padding: 12px; border-bottom: 1px solid #374151;">${fecha}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #374151;">${servicio}</td>
-                                <td style="padding: 12px; border-bottom: 1px solid #374151;"><span style="color: #fca5a5;">${duracion}</span></td>
-                                <td style="padding: 12px; border-bottom: 1px solid #374151;"><span class="tipo-global">${tipo}</span></td>
-                                <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td>
-                            `;
-                            tabla.appendChild(fila);
-                        }
+                        const fila = document.createElement("tr");
+                        fila.innerHTML = `
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;">${fecha}</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;">${servicio}</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;"><span style="color: #fca5a5;">${duracion}</span></td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;"><span class="tipo-global">${tipo}</span></td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td>
+                        `;
+                        tabla.appendChild(fila);
                     });
                 }
             } catch (error) { 
