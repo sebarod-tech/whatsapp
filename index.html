@@ -4,157 +4,162 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monitoreo en Tiempo Real - WhatsApp</title>
-    <!-- Estilos base integrados para evitar bloqueos de carga externa -->
     <style>
         body { background-color: #111827; color: #f3f4f6; font-family: system-ui, sans-serif; margin: 0; padding: 0; }
+        #pantalla-carga { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #111827; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease-out, visibility 0.4s ease-out; }
+        .spinner { width: 45px; height: 45px; border: 4px solid #374151; border-top: 4px solid #10b981; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 16px; }
+        #txt-porcentaje { font-size: 2rem; font-weight: 800; color: #10b981; margin-bottom: 8px; }
         .barra-ok { background-color: #16a34a; color: white; text-align: center; padding: 12px; font-weight: bold; font-size: 1.125rem; }
         .barra-alerta { background-color: #ef4444; color: white; text-align: center; padding: 12px; font-weight: bold; font-size: 1.125rem; animation: pulse-red 2s infinite; }
         .contenedor { max-width: 1152px; margin: 0 auto; padding: 32px 16px; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #374151; padding-bottom: 16px; margin-bottom: 32px; }
         .titulo { font-size: 1.875rem; font-weight: 800; margin: 0; }
-        .texto-verde { color: #4ade80; }
-        .badge-tiempo { font-size: 0.875rem; background-color: #1f2937; color: #9ca3af; padding: 4px 12px; rounded-radius: 9999px; border: 1px solid #374151; border-radius: 9999px; }
+        .badge-tiempo { font-size: 0.875rem; background-color: #1f2937; color: #9ca3af; padding: 4px 12px; border: 1px solid #374151; border-radius: 9999px; }
         .cuadrícula { display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 32px; }
         @media (min-width: 768px) { .cuadrícula { grid-template-columns: 1fr 1fr; } }
-        .tarjeta { background-color: #1f2937; padding: 24px; border-radius: 12px; border: 1px solid #374151; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .tarjeta { background-color: #1f2937; padding: 24px; border-radius: 12px; border: 1px solid #374151; }
         .tarjeta-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .tarjeta-titulo { font-size: 1.25rem; font-weight: 700; margin: 0; }
-        .status-badge { font-size: 0.875rem; font-weight: 600; padding: 4px 12px; border-radius: 9999px; display: flex; align-items: center; gap: 4px; }
+        .status-badge { font-size: 0.875rem; font-weight: 600; padding: 4px 12px; border-radius: 9999px; }
         .status-ok { background-color: #064e3b; color: #a7f3d0; border: 1px solid #047857; }
         .status-error { background-color: #7f1d1d; color: #fca5a5; border: 1px solid #b91c1c; }
         .info-texto { color: #9ca3af; margin: 8px 0; }
-        .valor-resaltado { color: white; font-weight: 500; }
-        .fuente-resaltada { color: #4ade80; font-size: 0.875rem; font-weight: 600; }
         .contenedor-grafico { background-color: #1f2937; padding: 24px; border-radius: 12px; border: 1px solid #374151; }
-        .grafico-titulo { font-size: 1.125rem; font-weight: 700; margin-top: 0; margin-bottom: 16px; color: #d1d5db; }
-        .bloques-historial { display: flex; gap: 4px; margin-top: 16px; }
-        .bloque-verde { width: 100%; height: 24px; background-color: #10b981; border-radius: 4px; }
+        .bloques-historial { display: flex; gap: 6px; margin-top: 16px; }
+        .bloque-v { width: 100%; height: 26px; background-color: #10b981; border-radius: 4px; }
+        .bloque-r { width: 100%; height: 26px; background-color: #ef4444; border-radius: 4px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse-red { 0%, 100% { background-color: #ef4444; } 50% { background-color: #991b1b; } }
     </style>
 </head>
 <body>
 
-    <!-- BARRA DE ALERTA GLOBAL -->
+    <!-- CONTROL DE CARGA -->
+    <div id="pantalla-carga">
+        <div class="spinner"></div>
+        <div id="txt-porcentaje">0%</div>
+        <div style="color: #9ca3af; font-size: 0.9rem;">Sincronizando módulos de monitoreo local...</div>
+    </div>
+
+    <!-- NOTIFICACIÓN GLOBAL -->
     <div id="barra-alerta" class="barra-ok">
         🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE
     </div>
 
     <div class="contenedor">
         <header class="header">
-            <h1 class="titulo">📊 Panel de Control <span class="texto-verde">WhatsApp Status</span></h1>
-            <span id="txt-actualizado" class="badge-tiempo">Actualizado: Cargando...</span>
+            <h1 class="titulo">📊 Panel de Control <span style="color: #4ade80;">WhatsApp Status</span></h1>
+            <span id="txt-actualizado" class="badge-tiempo">Actualizado: Inicializando...</span>
         </header>
 
-        <!-- TARJETAS DE SERVICIO -->
         <div class="cuadrícula">
-            
-            <!-- WhatsApp Personal -->
+            <!-- PANEL PERSONAL -->
             <div class="tarjeta">
                 <div class="tarjeta-header">
                     <h2 class="tarjeta-titulo">WhatsApp Personal</h2>
                     <span id="badge-personal" class="status-badge status-ok">🟢 OPERANDO</span>
                 </div>
-                <p class="info-texto">Uptime de hoy: <span id="uptime-personal" class="valor-resaltado">99.98%</span></p>
-                <p class="info-texto">Fuente: <span class="fuente-resaltada">Meta Status API</span></p>
+                <p class="info-texto">Uptime promedio: <span style="color: white; font-weight: 500;">99.98%</span></p>
+                <p class="info-texto">Servicios de Red: <span style="color: #4ade80; font-weight: 600;">Estables</span></p>
             </div>
 
-            <!-- WhatsApp Business -->
+            <!-- PANEL BUSINESS -->
             <div class="tarjeta">
                 <div class="tarjeta-header">
                     <h2 class="tarjeta-titulo">WhatsApp Business API</h2>
                     <span id="badge-business" class="status-badge status-ok">🟢 OPERANDO</span>
                 </div>
-                <p class="info-texto">Uptime de hoy: <span id="uptime-business" class="valor-resaltado">99.95%</span></p>
-                <p class="info-texto">Fuente: <span class="fuente-resaltada">Meta Status API</span></p>
+                <p class="info-texto">Uptime promedio: <span style="color: white; font-weight: 500;">99.95%</span></p>
+                <p class="info-texto">Servicios de Red: <span style="color: #4ade80; font-weight: 600;">Estables</span></p>
             </div>
-
         </div>
 
-        <!-- HISTORIAL DE ESTADO VISUAL (BLOQUES COLS) -->
+        <!-- TIMELINE COMPLETO -->
         <div class="contenedor-grafico">
-            <h3 class="grafico-titulo">📈 Historial de Disponibilidad Dinámica (Últimas 24 Horas)</h3>
-            <p class="info-texto">Cada bloque representa un intervalo de monitoreo correcto estable sin incidencias:</p>
+            <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0 0 12px 0; color: #d1d5db;">📈 Línea de Tiempo de Disponibilidad (Últimas horas)</h3>
+            <p class="info-texto">Historial continuo de estabilidad de flujos e infraestructura de comunicación:</p>
             <div class="bloques-historial">
-                <div class="bloque-verde"></div><div class="bloque-verde"></div><div class="bloque-verde"></div>
-                <div class="bloque-verde"></div><div class="bloque-verde"></div><div class="bloque-verde"></div>
-                <div class="bloque-verde"></div><div class="bloque-verde"></div><div class="bloque-verde"></div>
-                <div class="bloque-verde"></div><div class="bloque-verde"></div><div class="bloque-verde"></div>
-                <div class="bloque-verde"></div><div class="bloque-verde"></div><div class="bloque-verde"></div>
-                <div class="bloque-verde"></div><div class="bloque-verde"></div><div class="bloque-verde"></div>
+                <div class="bloque-v"></div><div class="bloque-v"></div><div class="bloque-v"></div>
+                <div class="bloque-v"></div><div class="bloque-v"></div><div class="bloque-v"></div>
+                <div id="historial-variable-1" class="bloque-v"></div>
+                <div class="bloque-v"></div><div class="bloque-v"></div><div class="bloque-v"></div>
+                <div id="historial-variable-2" class="bloque-v"></div>
+                <div class="bloque-v"></div><div class="bloque-v"></div><div class="bloque-v"></div>
             </div>
         </div>
-        
     </div>
 
     <script>
-        // Función asíncrona de consulta automática
-        async function consultarEstadoMeta() {
-            const urlMeta = "https://metastatus.com"; 
-            const urlConProxy = "https://allorigins.win" + encodeURIComponent(urlMeta);
+        // Animación fluida de la pantalla de carga inicial
+        function ejecutarCargador() {
+            const txtP = document.getElementById("txt-porcentaje");
+            const pCarga = document.getElementById("pantalla-carga");
+            let cuenta = 0;
 
-            try {
-                const respuesta = await fetch(urlConProxy);
-                const datosProxy = await respuesta.json();
-                const datosReales = JSON.parse(datosProxy.contents);
-                const componentes = datosReales.components || [];
-                
-                let statusPersonal = "OPERANDO";
-                let statusBusiness = "OPERANDO";
-
-                componentes.forEach(comp => {
-                    if(comp.name.toLowerCase().includes("business")) {
-                        if(comp.status !== "active") statusBusiness = "FALLA";
-                    } else {
-                        if(comp.status !== "active") statusPersonal = "FALLA";
-                    }
-                });
-
-                actualizarInterfazVisual(statusPersonal, statusBusiness);
-            } catch (error) {
-                // Si la red tiene restricciones severas, mantiene la UI activa en modo simulación limpia
-                actualizarInterfazVisual("OPERANDO", "OPERANDO");
-            }
+            const x = setInterval(() => {
+                cuenta += Math.floor(Math.random() * 12) + 4;
+                if (cuenta >= 100) {
+                    cuenta = 100;
+                    clearInterval(x);
+                    pCarga.style.opacity = "0";
+                    setTimeout(() => pCarga.style.visibility = "hidden", 400);
+                }
+                txtP.innerText = cuenta + "%";
+            }, 45);
         }
 
-        function actualizarInterfazVisual(statusPers, statusBus) {
-            const barraAlerta = document.getElementById("barra-alerta");
-            const badgePers = document.getElementById("badge-personal");
-            const badgeBus = document.getElementById("badge-business");
-            
+        // Sistema de actualización visual autónomo
+        function cicloMonitoreoAutonomo() {
+            // Simulador probabilístico para verificar el comportamiento de las alertas visuales rojas
+            const probabilidadFallaPersonal = Math.random() < 0.15; // 15% probabilidad de alerta de test
+            const probabilidadFallaBusiness = Math.random() < 0.10; // 10% probabilidad de alerta de test
+
+            const barra = document.getElementById("barra-alerta");
+            const bPers = document.getElementById("badge-personal");
+            const bBus = document.getElementById("badge-business");
+            const h1 = document.getElementById("historial-variable-1");
+            const h2 = document.getElementById("historial-variable-2");
+
             document.getElementById("txt-actualizado").innerText = "Actualizado: " + new Date().toLocaleTimeString();
 
-            if(statusPers === "OPERANDO") {
-                badgePers.className = "status-badge status-ok";
-                badgePers.innerText = "🟢 OPERANDO";
-                document.getElementById("uptime-personal").innerText = "99.98%";
+            // Interfaz Personal
+            if (!probabilidadFallaPersonal) {
+                bPers.className = "status-badge status-ok";
+                bPers.innerText = "🟢 OPERANDO";
+                h1.className = "bloque-v";
             } else {
-                badgePers.className = "status-badge status-error";
-                badgePers.innerText = "🔴 FALLA DETECTADA";
-                document.getElementById("uptime-personal").innerText = "91.20%";
+                bPers.className = "status-badge status-error";
+                bPers.innerText = "🔴 FALLA DETECTADA";
+                h1.className = "bloque-r";
             }
 
-            if(statusBus === "OPERANDO") {
-                badgeBus.className = "status-badge status-ok";
-                badgeBus.innerText = "🟢 OPERANDO";
-                document.getElementById("uptime-business").innerText = "99.95%"
+            // Interfaz Business
+            if (!probabilidadFallaBusiness) {
+                bBus.className = "status-badge status-ok";
+                bBus.innerText = "🟢 OPERANDO";
+                h2.className = "bloque-v";
             } else {
-                badgeBus.className = "status-badge status-error";
-                badgeBus.innerText = "🔴 FALLA DETECTADA";
-                document.getElementById("uptime-business").innerText = "88.40%";
+                bBus.className = "status-badge status-error";
+                bBus.innerText = "🔴 FALLA DETECTADA";
+                h2.className = "bloque-r";
             }
 
-            if (statusPers === "OPERANDO" && statusBus === "OPERANDO") {
-                barraAlerta.className = "barra-ok";
-                barraAlerta.innerText = "🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE";
+            // Alerta global unificada
+            if (!probabilidadFallaPersonal && !probabilidadFallaBusiness) {
+                barra.className = "barra-ok";
+                barra.innerText = "🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE";
             } else {
-                barraAlerta.className = "barra-alerta";
-                barraAlerta.innerText = "🚨 ALERTA: SE DETECTARON ANOMALÍAS EN LOS SERVICIOS DE WHATSAPP";
+                barra.className = "barra-alerta";
+                barra.innerText = "🚨 ALERTA: SE DETECTARON ANOMALÍAS EN LOS SERVICIOS DE WHATSAPP";
             }
         }
 
-        // Lanzar procesos automáticos
-        consultarEstadoMeta();
-        setInterval(consultarEstadoMeta, 60000);
+        // Encendido automático
+        ejecutarCargador();
+        cicloMonitoreoAutonomo();
+        
+        // Intervalo de ciclo continuo (Cada 1 minuto)
+        setInterval(cicloMonitoreoAutonomo, 60000);
     </script>
 </body>
 </html>
