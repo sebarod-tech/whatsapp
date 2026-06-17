@@ -127,26 +127,24 @@
             }, 20);
         }
 
-        // Descarga el historial unificado directo de Google Sheets
+        // Descarga el historial unificado directo de Google Sheets desarmando el formato del array
         async function descargarHistorialGoogleSheets() {
             try {
                 const respuesta = await fetch(URL_GOOGLE_DATABASE);
                 const registros = await respuesta.json();
                 
-                // CONTROL DE DEPURACIÓN: Ver en la consola del navegador si Google está enviando datos
-                console.log("Datos recibidos de Google Sheets:", registros);
-                
+                console.log("Datos crudos de Google Sheets:", registros);
                 const tabla = document.getElementById("lista-caidas-publicas");
                 
                 if (registros && registros.length > 0) {
                     tabla.innerHTML = ""; // Borra el mensaje de 'No hay registros'
                     
                     registros.forEach(item => {
-                        // Extraer el array interno de celdas que envía Google Apps Script
+                        // Extraer el array interno de celdas que envía nuestro nuevo script de 5 columnas
                         const celda = item.fecha || []; 
                         
-                        // Validar que la fila tenga datos reales
-                        if (celda.length >= 4) {
+                        // Si la celda contiene los datos agrupados en un array de Google
+                        if (Array.isArray(celda) && celda.length >= 4) {
                             const fila = document.createElement("tr");
                             fila.innerHTML = `
                                 <td>${celda[0]}</td>
