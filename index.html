@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo Corporativo Sincronizado</title>
+    <title>Panel de Disponibilidad de WhatsApp</title>
     <style>
         body { background-color: #111827; color: #f3f4f6; font-family: system-ui, sans-serif; margin: 0; padding: 0; }
         #pantalla-carga { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #111827; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease-out, visibility 0.4s ease-out; }
@@ -14,7 +14,9 @@
         .contenedor { max-width: 1152px; margin: 0 auto; padding: 32px 16px; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #374151; padding-bottom: 16px; margin-bottom: 32px; }
         .titulo { font-size: 1.875rem; font-weight: 800; margin: 0; }
+        .contenedor-badges { display: flex; gap: 8px; align-items: center; }
         .badge-tiempo { font-size: 0.875rem; background-color: #1f2937; color: #9ca3af; padding: 4px 12px; border: 1px solid #374151; border-radius: 9999px; }
+        .badge-contador { font-size: 0.875rem; background-color: #111827; color: #10b981; padding: 4px 12px; border: 1px solid #047857; border-radius: 9999px; font-weight: 600; min-width: 150px; text-align: center; }
         .cuadrícula { display: grid; grid-template-columns: 1fr; gap: 24px; margin-bottom: 32px; }
         @media (min-width: 768px) { .cuadrícula { grid-template-columns: 1fr 1fr; } }
         .tarjeta { background-color: #1f2937; padding: 24px; border-radius: 12px; border: 1px solid #374151; }
@@ -30,57 +32,59 @@
         .tabla-caidas th { padding: 12px; border-bottom: 2px solid #374151; color: #9ca3af; font-size: 0.9rem; }
         .tabla-caidas td { padding: 12px; border-bottom: 1px solid #374151; font-size: 0.95rem; }
         .tipo-global { color: #fca5a5; font-weight: bold; }
-        .tipo-historico { color: #f87171; font-weight: bold; background-color: #7f1d1d; padding: 2px 8px; border-radius: 4px; font-size: 0.85rem; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes pulse-red { 0%, 100% { background-color: #ef4444; } 50% { background-color: #991b1b; } }
     </style>
 </head>
 <body>
-    <div id="pantalla-carga"><div class="spinner"></div><div id="txt-porcentaje">0%</div><div style="color: #9ca3af; font-size: 0.9rem;">Sincronizando con la base de datos persistente de Google...</div></div>
+    <div id="pantalla-carga"><div class="spinner"></div><div id="txt-porcentaje">0%</div><div style="color: #9ca3af; font-size: 0.9rem;">Sincronizando base de datos en la nube...</div></div>
     <div id="barra-alerta" class="barra-ok">🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE</div>
     
     <div class="contenedor">
         <header class="header">
-            <h1 class="titulo">📊 Panel de Disponibilidad de <span style="color: #4ade80;">WhatsApp</span></h1>
-            <span id="txt-actualizado" class="badge-tiempo">Actualizado: Sincronizando...</span>
+            <h1 class="titulo">📋 <span style="color: #4ade80;">Panel de Disponibilidad de WhatsApp</span></h1>
+            <div class="contenedor-badges">
+                <span id="txt-contador" class="badge-contador">🔄 Sincronizando...</span>
+                <span id="txt-actualizado" class="badge-tiempo">Actualizado: Conectando...</span>
+            </div>
         </header>
 
         <div class="cuadrícula">
             <div class="tarjeta">
                 <div class="tarjeta-header"><h2 class="tarjeta-titulo">WhatsApp Personal</h2><span id="badge-personal" class="status-badge status-ok">🟢 OPERANDO</span></div>
-                <p class="info-texto">Base de datos en la nube: <span style="color: #4ade80; font-weight: 600;">Sincronizada</span></p>
-                <p class="info-texto">Intervalo de auditoría: <span class="valor-resaltado">Cada 1 min</span></p>
+                <p class="info-texto">Base de datos compartida: <span style="color: #4ade80; font-weight: 600;">Google Sheets Conectado</span></p>
+                <p class="info-texto">Intervalo de auditoría de red: <span class="valor-resaltado">Cada 1 min</span></p>
             </div>
             <div class="tarjeta">
                 <div class="tarjeta-header"><h2 class="tarjeta-titulo">WhatsApp Business API</h2><span id="badge-business" class="status-badge status-ok">🟢 OPERANDO</span></div>
-                <p class="info-texto">Base de datos en la nube: <span style="color: #4ade80; font-weight: 600;">Sincronizada</span></p>
-                <p class="info-texto">Intervalo de auditoría: <span class="valor-resaltado">Cada 1 min</span></p>
+                <p class="info-texto">Base de datos compartida: <span style="color: #4ade80; font-weight: 600;">Google Sheets Conectado</span></p>
+                <p class="info-texto">Intervalo de auditoría de red: <span class="valor-resaltado">Cada 1 min</span></p>
             </div>
         </div>
 
-        <!-- HISTORIAL COMPARTIDO EXTRAÍDO DESDE GOOGLE SHEETS -->
-        <div class="tabla-contenedor" style="border-color: #dc2626; margin-top: 24px;">
-            <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0; color: #d1d5db;">📋 Registro de Caídas Masivas (Historial Persistente en Google Sheets)</h3>
-            <p class="info-texto">Historial compartido para todo el equipo extraído en la nube. Registra cortes superiores a 1 minuto:</p>
+        <div class="tabla-contenedor">
+            <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0; color: #d1d5db;">📋 Registro de Caídas e Incidentes Sincronizados</h3>
+            <p class="info-texto">Historial corporativo extraído desde la nube. Muestra los cortes que superaron el umbral de 1 minuto continuo en falla:</p>
             <table class="tabla-caidas">
                 <thead>
                     <tr>
                         <th>Fecha y Hora Detectada</th>
-                        <th>Servicio Afectado</th>
-                        <th>Duración Registrada</th>
-                        <th>Severidad del Incidente</th>
+                        <th>Canal Afectado</th>
+                        <th>Duración Real</th>
+                        <th>Estado del Incidente</th>
                     </tr>
                 </thead>
                 <tbody id="lista-caidas-publicas">
-                    <tr id="sin-caidas-recientes"><td colspan="4" style="color: #6b7280; text-align: center; padding: 20px;">No hay caídas registradas en la base de datos de Google Sheets.</td></tr>
+                    <tr id="sin-caidas-recientes"><td colspan="4" style="color: #6b7280; text-align: center; padding: 20px;">No hay registros de fallas almacenados en Google Sheets.</td></tr>
                 </tbody>
             </table>
         </div>
-
     </div>
     <script>
-        // CONFIGURACIÓN: Reemplaza este enlace por el tuyo de Google Apps Script generado en el Paso 4
+        // Cambia este enlace por tu URL real de Apps Script que termina en /exec
         const URL_GOOGLE_DATABASE = "https://script.google.com/macros/s/AKfycbxiRubWVDgcYJtZNK92X70zMg4yPL3lu_ZRpbsYqI7_ipmGPFyFxFnyzPVVtIMAW3YSMw/exec";
+        
+        let tiempoRestante = 60; // Temporizador inicial de 60 segundos
 
         function ejecutarCargador() {
             const txtP = document.getElementById("txt-porcentaje");
@@ -98,16 +102,14 @@
             }, 20);
         }
 
-        // Descarga el historial compartido directo de Google Sheets sin importar quién esté conectado
         async function descargarHistorialGoogleSheets() {
             try {
                 const respuesta = await fetch(URL_GOOGLE_DATABASE);
                 const registros = await respuesta.json();
-                
                 const tabla = document.getElementById("lista-caidas-publicas");
                 
                 if (registros.length > 0) {
-                    tabla.innerHTML = ""; // Limpia el mensaje de vacío
+                    tabla.innerHTML = "";
                     registros.forEach(item => {
                         const fila = document.createElement("tr");
                         fila.innerHTML = `
@@ -124,7 +126,6 @@
             }
         }
 
-        // Consulta en tiempo real el estado actual de los servidores
         async function verificarEstadoActualMeta() {
             const urlMetaAPI = "https://metastatus.com";
             const proxySeguro = "https://allorigins.win" + encodeURIComponent(urlMetaAPI);
@@ -187,13 +188,34 @@
         function cicloCompletoMonitoreo() {
             verificarEstadoActualMeta();
             descargarHistorialGoogleSheets();
+            tiempoRestante = 60; // Resetea el contador a 60 segundos tras cada consulta exitosa
         }
 
-        // Ejecuciones iniciales
+        // --- RELOJ SECUNDARIO EN TIEMPO REAL PARA EL CONTADOR ---
+        function iniciarContadorRegresivo() {
+            const txtContador = document.getElementById("txt-contador");
+            
+            setInterval(() => {
+                tiempoRestante--;
+                
+                if (tiempoRestante <= 0) {
+                    txtContador.innerText = "🔄 Actualizando...";
+                    txtContador.style.color = "#3b82f6";
+                    txtContador.style.borderColor = "#1d4ed8";
+                } else {
+                    txtContador.innerText = `🔄 Próxima revisión en ${tiempoRestante}s`;
+                    txtContador.style.color = "#10b981";
+                    txtContador.style.borderColor = "#047857";
+                }
+            }, 1000); // Se ejecuta de forma exacta cada 1 segundo (1000ms)
+        }
+
+        // Ejecuciones de arranque
         ejecutarCargador();
         cicloCompletoMonitoreo();
+        iniciarContadorRegresivo();
         
-        // El panel de control se actualiza solo cada 1 minuto exacto
+        // Disparador principal automático cada 1 minuto exacto
         setInterval(cicloCompletoMonitoreo, 60000);
     </script>
 </body>
