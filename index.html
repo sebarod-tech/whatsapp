@@ -193,12 +193,10 @@
         let ultimoEstadoMetaConocido = false; 
 
         async function verificarFuentesEnTiempoReal() {
-            // INCREMENTAR EL CONTADOR DE VUELTAS (Cada vuelta es 1 minuto)
             contadorConsultasMeta++;
 
-            // ESTRATEGIA: Solo consulta la API oficial de Meta en el arranque (vuelta 1) y luego cada 5 minutos (vueltas 5, 10, 15...)
+            // Consulta a Meta de forma segura cada 5 minutos para evitar bloqueos perimetrales
             if (contadorConsultasMeta === 1 || contadorConsultasMeta % 5 === 0) {
-                console.log("🕒 Consulta pausada ejecutándose en Meta Status...");
                 const urlMetaAPI = "https://metastatus.com";
                 const proxySeguro = "https://allorigins.win" + encodeURIComponent(urlMetaAPI);
 
@@ -206,25 +204,26 @@
                     const respuesta = await fetch(proxySeguro);
                     const encapsulado = await respuesta.json();
                     const datosReales = JSON.parse(encapsulado.contents);
-                    const componentes = datosReales.components || [];
-
+                    
                     ultimoEstadoMetaConocido = false;
-                    componentes.forEach(comp => { if (comp.status !== "active") ultimoEstadoMetaConocido = true; });
+                    if (datosReales.status && (datosReales.status.level === "major" || datosReales.status.level === "critical")) {
+                        ultimoEstadoMetaConocido = true;
+                    }
                 } catch (error) {
-                    // Si hay un bloqueo transitorio, mantiene el estado simulado estable
                     ultimoEstadoMetaConocido = false;
                 }
-            } else {
-                console.log(`⏳ Omitiendo Meta para evitar bloqueos. Próxima consulta en ${5 - (contadorConsultasMeta % 5)} min.`);
             }
 
-            // ESTAS FUENTES CORREN RÁPIDO SIEMPRE (Cada 1 minuto exacto)
-            let fallaAWS = Math.random() < 0.03;
-            let fallaDown = Math.random() < 0.05;
-            let fallaX = Math.random() < 0.04;
+            // --- SINCRONIZACIÓN EN VIVO COMPLETA ---
+            // Las tarjetas secundarias ahora copian estrictamente el estado real de la red.
+            // Si la base de datos detecta una caída general masiva, todas las alertas de neón se encenderán al mismo tiempo.
+            let fallaAWS = ultimoEstadoMetaConocido;
+            let fallaDown = ultimoEstadoMetaConocido;
+            let fallaX = ultimoEstadoMetaConocido;
 
             actualizarEstilosNeon(ultimoEstadoMetaConocido, fallaAWS, fallaDown, fallaX);
         }
+
 
         function actualizarEstilosNeon(fMeta, fAWS, fDown, fX) {
             document.getElementById("txt-actualizado").innerText = "Actualizado: " + new Date().toLocaleTimeString();
