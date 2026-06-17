@@ -97,6 +97,7 @@
                         <th>Canal / Fuente Afectada</th>
                         <th>Duración Real</th>
                         <th>Estado del Incidente</th>
+                        <th>Origen / Auditoría</th> <!-- 👈 ESTA ES LA NUEVA COLUMNA -->
                     </tr>
                 </thead>
                 <tbody id="lista-caidas-publicas">
@@ -127,33 +128,36 @@
             }, 20);
         }
 
-        // Descarga el historial unificado directo de Google Sheets desarmando el formato del array
+        // Descarga el historial unificado directo de Google Sheets leyendo las 5 columnas
         async function descargarHistorialGoogleSheets() {
             try {
                 const respuesta = await fetch(URL_GOOGLE_DATABASE);
                 const registros = await respuesta.json();
                 
-                console.log("Datos crudos de Google Sheets:", registros);
+                console.log("Registros en vivo descargados (5 columnas):", registros);
+                
                 const tabla = document.getElementById("lista-caidas-publicas");
                 
                 if (registros && registros.length > 0) {
-                    tabla.innerHTML = ""; // Borra el mensaje de 'No hay registros'
+                    tabla.innerHTML = ""; // Borra el aviso de tabla vacía
                     
                     registros.forEach(item => {
-                        // Extraer el array interno de celdas que envía nuestro nuevo script de 5 columnas
-                        const celda = item.fecha || []; 
-                        
-                        // Si la celda contiene los datos agrupados en un array de Google
-                        if (Array.isArray(celda) && celda.length >= 4) {
-                            const fila = document.createElement("tr");
-                            fila.innerHTML = `
-                                <td>${celda[0]}</td>
-                                <td>${celda[1]}</td>
-                                <td><span style="color: #fca5a5;">${celda[2]}</span></td>
-                                <td><span class="tipo-global">${celda[3]}</span></td>
-                            `;
-                            tabla.appendChild(fila);
-                        }
+                        // Extraer las 5 variables mapeadas desde tu Apps Script
+                        const fecha = item.fecha || "---";
+                        const servicio = item.servicio || "---";
+                        const duracion = item.duracion || "---";
+                        const tipo = item.tipo || "---";
+                        const fuente = item.fuente || "API Sincronizada"; // 👈 NUEVA VARIABLE
+
+                        const fila = document.createElement("tr");
+                        fila.innerHTML = `
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;">${fecha}</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;">${servicio}</td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;"><span style="color: #fca5a5;">${duracion}</span></td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151;"><span class="tipo-global">${tipo}</span></td>
+                            <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td> <!-- 👈 NUEVA CELDA -->
+                        `;
+                        tabla.appendChild(fila);
                     });
                 }
             } catch (error) {
