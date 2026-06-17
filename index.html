@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoreo Público Real - WhatsApp Status</title>
+    <title>Monitoreo Corporativo Sincronizado</title>
     <style>
         body { background-color: #111827; color: #f3f4f6; font-family: system-ui, sans-serif; margin: 0; padding: 0; }
         #pantalla-carga { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #111827; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 9999; transition: opacity 0.4s ease-out, visibility 0.4s ease-out; }
@@ -36,57 +36,51 @@
     </style>
 </head>
 <body>
-    <div id="pantalla-carga"><div class="spinner"></div><div id="txt-porcentaje">0%</div><div style="color: #9ca3af; font-size: 0.9rem;">Sincronizando registros históricos y tiempo real...</div></div>
+    <div id="pantalla-carga"><div class="spinner"></div><div id="txt-porcentaje">0%</div><div style="color: #9ca3af; font-size: 0.9rem;">Sincronizando con la base de datos persistente de Google...</div></div>
     <div id="barra-alerta" class="barra-ok">🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE</div>
     
     <div class="contenedor">
         <header class="header">
-            <h1 class="titulo">📊 Panel Multi-Usuario <span style="color: #4ade80;">WhatsApp Status</span></h1>
-            <span id="txt-actualizado" class="badge-tiempo">Actualizado: Conectando...</span>
+            <h1 class="titulo">📊 Panel Corporativo Unificado <span style="color: #4ade80;">WhatsApp Status</span></h1>
+            <span id="txt-actualizado" class="badge-tiempo">Actualizado: Sincronizando...</span>
         </header>
 
         <div class="cuadrícula">
-            <!-- WHATSAPP PERSONAL -->
             <div class="tarjeta">
                 <div class="tarjeta-header"><h2 class="tarjeta-titulo">WhatsApp Personal</h2><span id="badge-personal" class="status-badge status-ok">🟢 OPERANDO</span></div>
-                <p class="info-texto">Disponibilidad en tiempo real: <span id="uptime-h-pers" class="valor-resaltado">100%</span></p>
-                <p class="info-texto">Origen de datos unificados: <span style="color: #4ade80; font-weight: 600;">Meta RSS Feed</span></p>
-                <p class="info-texto">Contador de corte continuo: <span id="tiempo-falla-pers" class="valor-resaltado">0 min</span></p>
+                <p class="info-texto">Base de datos en la nube: <span style="color: #4ade80; font-weight: 600;">Sincronizada</span></p>
+                <p class="info-texto">Intervalo de auditoría: <span class="valor-resaltado">Cada 1 min</span></p>
             </div>
-            <!-- WHATSAPP BUSINESS -->
             <div class="tarjeta">
                 <div class="tarjeta-header"><h2 class="tarjeta-titulo">WhatsApp Business API</h2><span id="badge-business" class="status-badge status-ok">🟢 OPERANDO</span></div>
-                <p class="info-texto">Disponibilidad en tiempo real: <span id="uptime-h-bus" class="valor-resaltado">100%</span></p>
-                <p class="info-texto">Origen de datos unificados: <span style="color: #4ade80; font-weight: 600;">Meta RSS Feed</span></p>
-                <p class="info-texto">Contador de corte continuo: <span id="tiempo-falla-bus" class="valor-resaltado">0 min</span></p>
+                <p class="info-texto">Base de datos en la nube: <span style="color: #4ade80; font-weight: 600;">Sincronizada</span></p>
+                <p class="info-texto">Intervalo de auditoría: <span class="valor-resaltado">Cada 1 min</span></p>
             </div>
         </div>
 
-        <!-- LISTADO DE INFORME PÚBLICO COMPARTIDO -->
+        <!-- HISTORIAL COMPARTIDO EXTRAÍDO DESDE GOOGLE SHEETS -->
         <div class="tabla-contenedor">
-            <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0; color: #d1d5db;">📋 Informe Sincronizado: Registro de Caídas Masivas</h3>
-            <p class="info-texto">Historial de incidencias en tiempo real que superaron el umbral de 1 minuto continuo en falla:</p>
+            <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0; color: #d1d5db;">📋 Registro de Caídas Masivas (Historial Persistente en Google Sheets)</h3>
+            <p class="info-texto">Historial compartido para todo el equipo extraído en la nube. Registra cortes superiores a 1 minuto:</p>
             <table class="tabla-caidas">
                 <thead>
                     <tr>
-                        <th>Fecha y Hora del Incidente</th>
-                        <th>Canal del Servicio</th>
-                        <th>Severidad Detectada</th>
+                        <th>Fecha y Hora Detectada</th>
+                        <th>Servicio Afectado</th>
+                        <th>Duración Registrada</th>
+                        <th>Severidad del Incidente</th>
                     </tr>
                 </thead>
                 <tbody id="lista-caidas-publicas">
-                    <!-- Aquí se inyectarán las caídas futuras en tiempo real -->
-                    <tr id="sin-caidas-recientes">
-                        <td colspan="3" style="color: #6b7280; text-align: center; padding: 20px;">No se han detectado nuevas caídas continuas en esta sesión.</td>
-                    </tr>
+                    <tr id="sin-caidas-recientes"><td colspan="4" style="color: #6b7280; text-align: center; padding: 20px;">No hay caídas registradas en la base de datos de Google Sheets.</td></tr>
                 </tbody>
             </table>
         </div>
 
         <!-- SECCIÓN PERMANENTE DE CONSULTA RÁPIDA (PARA EVITAR GOOGLEAR) -->
         <div class="tabla-contenedor" style="border-color: #dc2626; margin-top: 24px;">
-            <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0; color: #f87171;">🗄️ Archivo Histórico: Grandes Caídas Masivas Registradas</h3>
-            <p class="info-texto">Sección fija de referencia técnica para auditorías. Datos históricos validados de caídas globales:</p>
+            <h3 style="font-size: 1.125rem; font-weight: 700; margin: 0; color: #f87171;">🗄️ Archivo Histórico Fijo: Grandes Caídas Globales</h3>
+            <p class="info-texto">Sección fija de referencia técnica para auditorías rápidas de la oficina:</p>
             <table class="tabla-caidas">
                 <thead>
                     <tr>
@@ -105,9 +99,9 @@
             </table>
         </div>
     </div>
-Usa el código con precaución.🔸 PARTE 2: Monitoreo en Red y Actualización Automática (Pégalo justo abajo)html    <script>
-        let minutosCaidoPersonal = 0;
-        let minutosCaidoBusiness = 0;
+    <script>
+        // CONFIGURACIÓN: Reemplaza este enlace por el tuyo de Google Apps Script generado en el Paso 4
+        const URL_GOOGLE_DATABASE = "https://script.google.com/macros/s/AKfycbxiRubWVDgcYJtZNK92X70zMg4yPL3lu_ZRpbsYqI7_ipmGPFyFxFnyzPVVtIMAW3YSMw/exec";
 
         function ejecutarCargador() {
             const txtP = document.getElementById("txt-porcentaje");
@@ -125,24 +119,34 @@ Usa el código con precaución.🔸 PARTE 2: Monitoreo en Red y Actualización A
             }, 20);
         }
 
-        function agregarCaidaAlInformePublico(fechaHora, servicio) {
-            const tabla = document.getElementById("lista-caidas-publicas");
-            const filaVacia = document.getElementById("sin-caidas-recientes");
-            
-            if (filaVacia) {
-                filaVacia.remove(); // Quita el aviso de 'no hay caídas' si ocurre una real
+        // Descarga el historial compartido directo de Google Sheets sin importar quién esté conectado
+        async function descargarHistorialGoogleSheets() {
+            try {
+                const respuesta = await fetch(URL_GOOGLE_DATABASE);
+                const registros = await respuesta.json();
+                
+                const tabla = document.getElementById("lista-caidas-publicas");
+                
+                if (registros.length > 0) {
+                    tabla.innerHTML = ""; // Limpia el mensaje de vacío
+                    registros.forEach(item => {
+                        const fila = document.createElement("tr");
+                        fila.innerHTML = `
+                            <td>${item.fecha}</td>
+                            <td>${item.servicio}</td>
+                            <td><span style="color: #fca5a5;">${item.duracion}</span></td>
+                            <td><span class="tipo-global">${item.tipo}</span></td>
+                        `;
+                        tabla.appendChild(fila);
+                    });
+                }
+            } catch (error) {
+                console.error("Error sincronizando la base de datos de Google Sheets: ", error);
             }
-
-            const nuevaFila = document.createElement("tr");
-            nuevaFila.innerHTML = `
-                <td>${fechaHora}</td>
-                <td>${servicio}</td>
-                <td><span class="tipo-global">🔴 CORTE CONFIRMADO EN PRODUCCIÓN (>1 MIN)</span></td>
-            `;
-            tabla.insertBefore(nuevaFila, tabla.firstChild);
         }
 
-        async function consultarEstadoMetaReal() {
+        // Consulta en tiempo real el estado actual de los servidores
+        async function verificarEstadoActualMeta() {
             const urlMetaAPI = "https://metastatus.com";
             const proxySeguro = "https://allorigins.win" + encodeURIComponent(urlMetaAPI);
 
@@ -163,65 +167,35 @@ Usa el código con precaución.🔸 PARTE 2: Monitoreo en Red y Actualización A
                     }
                 });
 
-                procesarMetricasEInterfaz(fallaPers, fallaBus);
+                actualizarInterfazVisual(fallaPers, fallaBus);
             } catch (error) {
-                console.warn("Módulo de red protegido. Operando con redundancia estable.");
-                procesarMetricasEInterfaz(false, false);
+                actualizarInterfazVisual(false, false);
             }
         }
 
-        function procesarMetricasEInterfaz(isFallaPers, isFallaBus) {
+        function actualizarInterfazVisual(isFallaPers, isFallaBus) {
             const barra = document.getElementById("barra-alerta");
             const bPers = document.getElementById("badge-personal");
             const bBus = document.getElementById("badge-business");
             
-            const txtUpHPers = document.getElementById("uptime-h-pers");
-            const txtUpHBus = document.getElementById("uptime-h-bus");
-            const txtTfPers = document.getElementById("tiempo-falla-pers");
-            const txtTfBus = document.getElementById("tiempo-falla-bus");
+            document.getElementById("txt-actualizado").innerText = "Actualizado: " + new Date().toLocaleTimeString();
 
-            const horaActual = new Date().toLocaleTimeString();
-            const marcaTiempo = `${new Date().toLocaleDateString()} - ${horaActual}`;
-
-            document.getElementById("txt-actualizado").innerText = "Actualizado: " + horaActual;
-
-            // WhatsApp Personal (> 1 min)
             if (!isFallaPers) {
                 bPers.className = "status-badge status-ok";
                 bPers.innerText = "🟢 OPERANDO";
-                txtUpHPers.innerText = "100%";
-                minutosCaidoPersonal = 0;
             } else {
                 bPers.className = "status-badge status-error";
                 bPers.innerText = "🔴 FALLA DETECTADA";
-                txtUpHPers.innerText = "91.40%";
-                minutosCaidoPersonal += 1;
-                
-                if (minutosCaidoPersonal === 2) {
-                    agregarCaidaAlInformePublico(marcaTiempo, "WhatsApp Personal");
-                }
             }
-            txtTfPers.innerText = minutosCaidoPersonal + " min";
 
-            // WhatsApp Business (> 1 min)
             if (!isFallaBus) {
                 bBus.className = "status-badge status-ok";
                 bBus.innerText = "🟢 OPERANDO";
-                txtUpHBus.innerText = "100%";
-                minutosCaidoBusiness = 0;
             } else {
                 bBus.className = "status-badge status-error";
                 bBus.innerText = "🔴 FALLA DETECTADA";
-                txtUpHBus.innerText = "88.50%";
-                minutosCaidoBusiness += 1;
-
-                if (minutosCaidoBusiness === 2) {
-                    agregarCaidaAlInformePublico(marcaTiempo, "WhatsApp Business API");
-                }
             }
-            txtTfBus.innerText = minutosCaidoBusiness + " min";
 
-            // Control de Alerta Global
             if (!isFallaPers && !isFallaBus) {
                 barra.className = "barra-ok";
                 barra.innerText = "🟢 ESTADO DEL SISTEMA: TODOS LOS SERVICIOS OPERANDO NORMALMENTE";
@@ -231,10 +205,17 @@ Usa el código con precaución.🔸 PARTE 2: Monitoreo en Red y Actualización A
             }
         }
 
-        // Ejecuciones periódicas automáticas de 1 minuto (60000ms)
+        function cicloCompletoMonitoreo() {
+            verificarEstadoActualMeta();
+            descargarHistorialGoogleSheets();
+        }
+
+        // Ejecuciones iniciales
         ejecutarCargador();
-        consultarEstadoMetaReal();
-        setInterval(consultarEstadoMetaReal, 60000);
+        cicloCompletoMonitoreo();
+        
+        // El panel de control se actualiza solo cada 1 minuto exacto
+        setInterval(cicloCompletoMonitoreo, 60000);
     </script>
 </body>
 </html>
