@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+        <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -130,62 +130,83 @@
         }
 
         async function descargarHistorialGoogleSheets() {
-            try {
-                const respuesta = await fetch(URL_GOOGLE_DATABASE);
-                const registros = await respuesta.json();
-        
-                console.log("Datos de control recibidos:", registros);
-                const tabla = document.getElementById("lista-caidas-publicas");
-        
-                if (registros && registros.length > 0) {
-                    tabla.innerHTML = ""; // Limpia por completo la tabla
-            
-                    registros.forEach(item => {
-                        let fecha = "---", servicio = "---", duracion = "---", tipo = "---", fuente = "API Sincronizada";
+          try {
+            const respuesta = await fetch(URL_GOOGLE_DATABASE);
+            const registros = await respuesta.json();
+    
+            console.log("Datos de control recibidos:", registros);
+            const tabla = document.getElementById("lista-caidas-publicas");
+    
+            // VARIABLES LOCALES PARA DETECTAR CAÍDAS DESDE GOOGLE SHEETS
+            let simularMetaCaido = false;
+            let simularAwsCaido = false;
+            let simularDownCaido = false;
+            let simularXCaido = false;
 
-                // CASO A: Si los datos vienen estructurados como propiedades individuales directas
+            if (registros && registros.length > 0) {
+              tabla.innerHTML = ""; // Limpia por completo la tabla anterior
+      
+              registros.forEach(item => {
+                let fecha = "---", servicio = "---", duracion = "---", tipo = "---", fuente = "API Sincronizada";
+        
+                // CASO A: Propiedades individuales directas
                 if (item && item.fecha && typeof item.fecha === 'string' && !item.fecha.includes(',')) {
-                    fecha = item.fecha;
-                    servicio = item.servicio || "---";
-                    duracion = item.duracion || "---";
-                    tipo = item.tipo || "---";
-                    fuente = item.fuente || "API Sincronizada";
-                } 
-                        // CASO B: Si vienen empaquetados en un solo bloque largo de texto separado por comas
-                        else {
-                            let textoAProcesar = "";
-                            if (item && item.fecha) textoAProcesar = String(item.fecha);
-                            else if (typeof item === 'string') textoAProcesar = item;
-                            else if (Array.isArray(item)) textoAProcesar = item.join(",");
-                            else textoAProcesar = JSON.stringify(item);
-
-                            if (textoAProcesar.includes(",")) {
-                                const partes = textoAProcesar.split(",");
-                                if (partes[0]) fecha = partes[0].trim();
-                                  if (partes[1]) servicio = partes[1].trim();
-                                if (partes[2]) duracion = partes[2].trim();
-                                if (partes[3]) tipo = partes[3].trim();
-                                if (partes[4]) fuente = partes[4].trim();
-                            } else {
-                                fecha = textoAProcesar;
-                            }
-                        }
-
-                        // Inyección segura de las celdas ordenadas en tu código HTML
-                        const fila = document.createElement("tr");
-                            fila.innerHTML = `
-                            <td style="padding: 12px; border-bottom: 1px solid #374151;">${fecha}</td>
-                            <td style="padding: 12px; border-bottom: 1px solid #374151;">${servicio}</td>
-                            <td style="padding: 12px; border-bottom: 1px solid #374151;"><span style="color: #fca5a5;">${duracion}</span></td>
-                            <td style="padding: 12px; border-bottom: 1px solid #374151;"><span class="tipo-global">${tipo}</span></td>
-                            <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td>
-                        `;
-                        tabla.appendChild(fila);
-                    });
+                  fecha = item.fecha;
+                  servicio = item.servicio || "---";
+                  duracion = item.duracion || "---";
+                  tipo = item.tipo || "---";
+                  fuente = item.fuente || "API Sincronizada";
                 }
-            } catch (error) { 
-                console.error("Error crítico en la comunicación con la base de datos: ", error); 
+                // CASO B: Bloque de texto separado por comas
+                else {
+                  let textoAProcesar = "";
+                  if (item && item.fecha) textoAProcesar = String(item.fecha);
+                  else if (typeof item === 'string') textoAProcesar = item;
+                  else if (Array.isArray(item)) textoAProcesar = item.join(",");
+                  else textoAProcesar = JSON.stringify(item);
+          
+                  if (textoAProcesar.includes(",")) {
+                    const partes = textoAProcesar.split(",");
+                    if (partes[0]) fecha = partes[0].trim();
+                    if (partes[1]) servicio = partes[1].trim();
+                    if (partes[2]) duracion = partes[2].trim();
+                    if (partes[3]) tipo = partes[3].trim();
+                    if (partes[4]) fuente = partes[4].trim();
+                  } else {
+                    fecha = textoAProcesar;
+                  }
+                }
+
+                // EVALUACIÓN EN TIEMPO REAL: Si hay un incidente en curso en las filas, activamos las alertas arriba
+                if (tipo.includes("🔴 INCIDENTE EN CURSO")) {
+                  if (servicio.includes("WhatsApp")) simularMetaCaido = true;
+                  if (servicio.includes("Amazon AWS")) simularAwsCaido = true;
+                  if (servicio.includes("Downdetector")) simularDownCaido = true;
+                  if (servicio.includes("X API")) simularXCaido = true;
+                }
+        
+                // Inyección de celdas en el HTML con soporte para 5 columnas (Corregido colspan)
+                const fila = document.createElement("tr");
+                fila.innerHTML = `
+                  <td style="padding: 12px; border-bottom: 1px solid #374151;">${fecha}</td>
+                  <td style="padding: 12px; border-bottom: 1px solid #374151;">${servicio}</td>
+                  <td style="padding: 12px; border-bottom: 1px solid #374151;"><span style="color: #fca5a5;">${duracion}</span></td>
+                  <td style="padding: 12px; border-bottom: 1px solid #374151;"><span class="tipo-global">${tipo}</span></td>
+                  <td style="padding: 12px; border-bottom: 1px solid #374151; color: #9ca3af; font-size: 0.9rem;">${fuente}</td>
+                `;
+                tabla.appendChild(fila);
+              });
+            } else {
+              // Ajuste de diseño: Ahora ocupa las 5 columnas en lugar de 4 si la tabla está vacía
+              tabla.innerHTML = `<tr id="sin-caidas-recientes"><td colspan="5" style="color: #6b7280; text-align: center; padding: 20px;">No hay registros de fallas almacenados en Google Sheets.</td></tr>`;
             }
+
+            // PINTAR LAS TARJETAS SUPERIORES BASÁNDONOS EN LA PLANILLA
+            actualizarEstilosNeon(simularMetaCaido, simularAwsCaido, simularDownCaido, simularXCaido);
+
+          } catch (error) {
+            console.error("Error crítico en la comunicación con la base de datos: ", error);
+          }
         }
 
         
@@ -258,7 +279,7 @@
         }
 
         function cicloCompletoMonitoreo() {
-            verificarFuentesEnTiempoReal();
+            // verificarFuentesEnTiempoReal();
             descargarHistorialGoogleSheets();
             tiempoRestante = 60; // El contador de la pantalla vuelve siempre a 60 segundos
         }
